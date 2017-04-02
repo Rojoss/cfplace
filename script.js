@@ -6,16 +6,13 @@ const FETCH_INTERVAL = 300 * 1000; // [MS] Time between cache update in.
 var template;
 var index = 0;
 
+var countdownTime = 0;
 
 function fetchTemplate() {
     console.info('Fetching latest version of the template...');
     fetch(TEMPLATE_URL).then((resp) => resp.json()).then(function (data) {
         // Cache template data
         template = data;
-
-        // Random start index
-        index = Math.floor(Math.random() * (template.colors[0].length * template.colors.length));
-
         console.info('Template has been updated!');
     }).catch(function (error) {
         console.error('Failed to fetch template!');
@@ -37,12 +34,14 @@ function drawPixel(x, y, color) {
             url: "https://www.reddit.com/api/place/draw.json", type: "POST",
             headers: { "x-modhash": modhash }, data: { x: x, y: y, color: color }
         }).done(data => {
-            console.log('Pixel drawn at ' + x + ',' + y + '!');
+            console.info('Pixel drawn at ' + x + ',' + y + '!');
             draw(data.wait_seconds);
+            countdownTime = data.wait_seconds;
             return;
         }).error(data => {
-            console.error('Failed to draw pixel at ' + x + ',' + y + '! - Trying again in ' + data.responseJSON.wait_seconds + ' seconds.');
+            console.warn('Failed to draw pixel at ' + x + ',' + y + '! - Trying again in ' + data.responseJSON.wait_seconds + ' seconds.');
             draw(data.responseJSON.wait_seconds);
+            countdownTime = data.responseJSON.wait_seconds;
             return;
         });
     });
@@ -79,3 +78,13 @@ function draw(secondsDelay) {
 fetchTemplate();
 window.setInterval(() => fetchTemplate(), FETCH_INTERVAL);
 draw(0);
+
+window.setInterval(() => {
+    if (countdownTime > 0) {
+        countdownTime--;
+
+        if (countdownTime % 10 == 0 || countdownTime == 5) {
+            console.info('Drawing in ' + countdownTime + ' seconds.');
+        }
+    }
+}, 1000);
