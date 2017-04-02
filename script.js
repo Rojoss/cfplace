@@ -46,12 +46,12 @@ function drawPixel(x, y, color) {
             countdownTime = Math.ceil(data.responseJSON.wait_seconds);
             return;
         });
-    }).error(data => {
+    }), (data => {
         console.warn('Failed to draw pixel at ' + x + ',' + y + '! - Trying again in 5 seconds.');
         draw(5);
         countdownTime = 5;
         return;
-    });;
+    });
 }
 
 function draw(secondsDelay) {
