@@ -5,6 +5,7 @@ const FETCH_INTERVAL = 300 * 1000; // [MS] Time between cache update in.
 
 var template;
 var index = 0;
+var attempts = 0;
 
 var countdownTime = 0;
 
@@ -35,6 +36,7 @@ function drawPixel(x, y, color) {
             headers: { "x-modhash": modhash }, data: { x: x, y: y, color: color }
         }).done(data => {
             console.info('Pixel drawn at ' + x + ',' + y + '!');
+            attempts = 0;
             draw(data.wait_seconds);
             countdownTime = Math.ceil(data.wait_seconds);
             return;
@@ -44,7 +46,12 @@ function drawPixel(x, y, color) {
             countdownTime = Math.ceil(data.responseJSON.wait_seconds);
             return;
         });
-    });
+    }).error(data => {
+        console.warn('Failed to draw pixel at ' + x + ',' + y + '! - Trying again in 5 seconds.');
+        draw(5);
+        countdownTime = 5;
+        return;
+    });;
 }
 
 function draw(secondsDelay) {
@@ -52,6 +59,7 @@ function draw(secondsDelay) {
         setTimeout(() => draw(0), 1000);
         return;
     }
+
     // Increment index to get a new coordinate
     var width = template.colors[0].length;
     var height = template.colors.length;
@@ -72,6 +80,14 @@ function draw(secondsDelay) {
     const yy = template.startY + y;
 
     // Try draw the pixel
+    if (secondsDelay <= 0) {
+        attempts++;
+        if (attempts > 10) {
+            console.warn('Too many failed attempts trying again in 5 seconds.');
+            secondsDelay = 5;
+            attempts = 0;
+        }
+    }
     setTimeout(() => drawPixel(xx, yy, color), secondsDelay * 1000);
 }
 
