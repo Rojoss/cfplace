@@ -36,12 +36,12 @@ function drawPixel(x, y, color) {
         }).done(data => {
             console.info('Pixel drawn at ' + x + ',' + y + '!');
             draw(data.wait_seconds);
-            countdownTime = data.wait_seconds;
+            countdownTime = Math.ceil(data.wait_seconds);
             return;
         }).error(data => {
-            console.warn('Failed to draw pixel at ' + x + ',' + y + '! - Trying again in ' + data.responseJSON.wait_seconds + ' seconds.');
+            console.warn('Failed to draw pixel at ' + x + ',' + y + '! - Trying again in ' + Math.ceil(data.responseJSON.wait_seconds) + ' seconds.');
             draw(data.responseJSON.wait_seconds);
-            countdownTime = data.responseJSON.wait_seconds;
+            countdownTime = Math.ceil(data.responseJSON.wait_seconds);
             return;
         });
     });
